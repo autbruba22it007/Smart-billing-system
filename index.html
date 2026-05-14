@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Billing Software</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Billing Software</h1>
+    <div class="header-actions">
+      <button id="importBtnTop" class="secondary">Import Data</button>
+      <button id="viewCompletedBtn" class="secondary">Completed Orders</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="meta-row">
+      <div class="meta-column">
+        <button id="stockBtn" class="cust-tab">Stock (<span id="stockTotal">0</span>)</button>
+        <div id="orderIdDisplay">Order ID: <span id="currentOrderId">1</span></div>
+
+        <div class="input-group small">
+          <label>Type of Customer</label>
+          <select id="customerTypeSelect">
+            <option value="Customer" selected>Customer</option>
+            <option value="Marketing">Marketing</option>
+          </select>
+        </div>
+
+        <!-- Category pills (main) -->
+        <div class="input-group">
+          <label>Category</label>
+          <div id="categoryTabs" class="pill-group"></div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="meta-column">
+        <div class="input-group small">
+          <label>Total Cakes</label>
+          <input type="number" id="totalCakes" min="0" value="0" />
+        </div>
+
+        <div class="input-group small">
+          <label>Payment Mode</label>
+          <select id="paymentMode">
+            <option value="" selected disabled>In Progress</option>
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Cash+UPI">Cash + UPI</option>
+          </select>
+        </div>
+
+        <div id="cashUpiDetails" class="input-group" style="display:none;">
+          <label>Enter amounts</label>
+          <div style="display:flex;gap:10px;">
+            <input type="number" id="cashAmount" placeholder="Cash ₹" min="0">
+            <input type="number" id="upiAmount" placeholder="UPI ₹" min="0">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Action</label>
+          <div class="buttons-inline">
+            <button id="startDineInBtn" class="secondary">Start Dine-in</button>
+            <button id="saveBtn" class="primary">Save Order</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="input-group">
+        <label>&nbsp;</label>
+        <div class="buttons-inline" style="justify-content:flex-end;">
+          <button id="scrollDineInBtn" class="secondary">Dine-in</button>
+        </div>
+      </div>
+    </div>
+
+    <section>
+      <div class="cakes" id="cakeGrid"></div>
+    </section>
+
+    <div class="summary" id="amountSummary">Total Amount: ₹0</div>
+
+    <div class="dine-header" id="dineInHeading">
+      <h2>Dine-in (in progress)</h2>
+      <div class="dine-search">
+        <input id="dineSearch" type="text" placeholder="Search by Order ID, flavor, or customer…" />
+        <button id="clearDineSearch" class="secondary">Clear</button>
+      </div>
+    </div>
+    <div id="dineList" class="dine-list empty-note"></div>
+  </main>
+
+  <!-- STOCK PANEL -->
+  <div id="stockPanel" class="stock-panel hidden">
+    <div class="stock-panel-content">
+      <div class="stock-header">
+        <h2>Manage Cake Stock</h2>
+        <div style="display:flex; gap:10px;">
+          <button id="manageItemsBtn" class="secondary">Add New Stock</button>
+          <button id="closeStockBtn" class="cust-tab">Close</button>
+        </div>
+      </div>
+
+      <!-- Category buttons inside stock -->
+      <div class="muted">Switch category</div>
+      <div id="stockCategoryTabs" class="pill-group" style="margin-bottom:10px;"></div>
+
+      <p class="muted">Enter quantities that came in. When you save, they’ll be recorded.</p>
+      <div id="stockList" class="stock-cards"></div>
+      <div class="stock-actions">
+        <button id="saveStockBtn" class="primary">Save Stock In</button>
+        <button id="resetStockBtn" class="danger">Reset All Stock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPLETED ORDERS -->
+  <div id="completedPanel" class="stock-panel hidden">
+    <div class="stock-panel-content">
+      <div class="stock-header">
+        <h2>Completed Orders</h2>
+        <div><button id="closeCompletedBtn" class="cust-tab">Close</button></div>
+      </div>
+      <div id="completedList" class="completed-scroll"></div>
+    </div>
+  </div>
+
+  <!-- ADD ITEM (Dine-in) -->
+  <div id="addItemModal" class="stock-panel hidden">
+    <div class="stock-panel-content" style="max-width:980px;">
+      <div class="stock-header">
+        <div>
+          <div style="font-weight:700;">Add Item</div>
+          <div class="muted" style="margin-top:4px;">Pick Dine-in / Take-away and select items to add to this order.</div>
+        </div>
+        <div><button id="closeAddItemBtn" class="cust-tab">Close</button></div>
+      </div>
+
+      <div class="input-group">
+        <label>Category</label>
+        <div id="addCategoryTabs" class="pill-group"></div>
+      </div>
+
+      <div class="additem-toolbar">
+        <div class="input-group small">
+          <label>Type</label>
+          <select id="addType">
+            <option value="dine">Dine-in</option>
+            <option value="take">Take-away</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Search</label>
+          <input type="text" id="addSearch" placeholder="Search cakes..." />
+        </div>
+        <div class="spacer"></div>
+        <button id="confirmAddSelectedBtn" class="primary">Add Selected Items</button>
+      </div>
+
+      <div id="addCardsGrid" class="addcards-grid"></div>
+    </div>
+  </div>
+
+  <!-- MANAGE ITEMS (ON/OFF) -->
+  <div id="manageItemsModal" class="stock-panel hidden">
+    <div class="stock-panel-content" style="max-width:980px;">
+      <div class="stock-header">
+        <h2>Manage Items</h2>
+        <div><button id="closeManageItemsBtn" class="cust-tab">Close</button></div>
+      </div>
+      <div class="muted">Switch category</div>
+      <div id="manageCategoryTabs" class="pill-group" style="margin-bottom:10px;"></div>
+      <p class="muted">Toggle items ON to show them on the main page, stock page, and add-item popup.</p>
+      <div id="manageItemsGrid" class="manage-grid"></div>
+      <div class="stock-actions" style="justify-content:flex-end;">
+        <button id="saveManageItemsBtn" class="primary">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
