@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Billing Software</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1 id="appTitle" style="cursor:pointer">Billing Software</h1>
+    <div class="header-actions">
+      <button id="dashboardBtn" class="secondary">Dashboard</button>
+      <button id="importBtnTop" class="secondary">Import Data</button>
+      <button id="viewCompletedBtn" class="secondary">Completed Orders</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="meta-row">
+      <div class="meta-column">
+        <button id="stockBtn" class="cust-tab">Stock (<span id="stockTotal">0</span>)</button>
+        <div id="orderIdDisplay">Order ID: <span id="currentOrderId">1</span></div>
+
+        <div class="input-group small">
+          <label>Type of Customer</label>
+          <select id="customerTypeSelect">
+            <option value="Customer" selected>Customer</option>
+            <option value="Marketing">Marketing</option>
+          </select>
+        </div>
+
+        <!-- Category pills (main) -->
+        <div class="input-group">
+          <label>Category</label>
+          <div id="categoryTabs" class="pill-group"></div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="meta-column">
+        <div class="input-group small">
+          <label>Total Cakes</label>
+          <input type="number" id="totalCakes" min="0" value="0" />
+        </div>
+
+        <div class="input-group small">
+          <label>Payment Mode</label>
+          <select id="paymentMode">
+            <option value="" selected disabled>In Progress</option>
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Cash+UPI">Cash + UPI</option>
+          </select>
+        </div>
+
+        <div id="cashUpiDetails" class="input-group" style="display:none;">
+          <label>Enter amounts</label>
+          <div style="display:flex;gap:10px;">
+            <input type="number" id="cashAmount" placeholder="Cash ₹" min="0">
+            <input type="number" id="upiAmount" placeholder="UPI ₹" min="0">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Action</label>
+          <div class="buttons-inline">
+            <button id="startDineInBtn" class="secondary">Start Dine-in</button>
+            <button id="saveBtn" class="primary">Save Order</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="input-group">
+        <label>&nbsp;</label>
+        <div class="buttons-inline" style="justify-content:flex-end;">
+          <button id="scrollDineInBtn" class="secondary">Dine-in</button>
+        </div>
+      </div>
+    </div>
+
+    <section>
+      <div class="cakes" id="cakeGrid"></div>
+    </section>
+
+    <div class="summary" id="amountSummary">Total Amount: ₹0</div>
+
+    <div class="dine-header" id="dineInHeading">
+      <h2>Dine-in (in progress)</h2>
+      <div class="dine-search">
+        <input id="dineSearch" type="text" placeholder="Search by Order ID, flavor, or customer…" />
+        <button id="clearDineSearch" class="secondary">Clear</button>
+      </div>
+    </div>
+    <div id="dineList" class="dine-list empty-note"></div>
+  </main>
+
+  <!-- STOCK PANEL -->
+  <div id="stockPanel" class="stock-panel hidden">
+    <div class="stock-panel-content">
+      <div class="stock-header">
+        <h2>Manage Cake Stock</h2>
+        <div style="display:flex; gap:10px;">
+          <button id="manageItemsBtn" class="secondary">Add New Stock</button>
+          <button id="closeStockBtn" class="cust-tab">Close</button>
+        </div>
+      </div>
+
+      <!-- Category buttons inside stock -->
+      <div class="muted">Switch category</div>
+      <div id="stockCategoryTabs" class="pill-group" style="margin-bottom:10px;"></div>
+
+      <p class="muted">Enter quantities that came in. When you save, they’ll be recorded.</p>
+      <div id="stockList" class="stock-cards"></div>
+      <div class="stock-actions">
+        <button id="saveStockBtn" class="primary">Save Stock In</button>
+        <button id="resetStockBtn" class="danger">Reset All Stock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPLETED ORDERS -->
+  <div id="completedPanel" class="stock-panel hidden">
+    <div class="stock-panel-content">
+      <div class="stock-header">
+        <h2>Completed Orders</h2>
+        <div><button id="closeCompletedBtn" class="cust-tab">Close</button></div>
+      </div>
+      <div id="completedList" class="completed-scroll"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div id="dashboardPanel" class="dashboard-page" style="display:none;">
+
+      <!-- Dashboard Header with Date Filter -->
+      <div class="dashboard-header">
+        <div>
+          <h2 style="margin:0 0 4px;">Dashboard</h2>
+          <p class="muted" style="margin:0;">Analytics Overview</p>
+        </div>
+        <div class="date-filter-group">
+          <label for="dateFilter" style="margin-bottom:4px;">Date Range</label>
+          <select id="dateFilter">
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="thisWeek">This Week</option>
+            <option value="thisMonth">This Month</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+        <div id="customDateRange" class="custom-date-inputs" style="display:none;">
+          <div class="input-group small">
+            <label>From</label>
+            <input type="date" id="customDateFrom">
+          </div>
+          <div class="input-group small">
+            <label>To</label>
+            <input type="date" id="customDateTo">
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="dashboard-grid summary-cards">
+        <div class="dashboard-card">
+          <div class="card-icon sales-icon">₹</div>
+          <div class="card-info">
+            <div class="card-value" id="totalSales">₹0</div>
+            <div class="card-label">Total Sales</div>
+          </div>
+        </div>
+        <div class="dashboard-card">
+          <div class="card-icon orders-icon">📋</div>
+          <div class="card-info">
+            <div class="card-value" id="totalOrders">0</div>
+            <div class="card-label">Total Orders</div>
+          </div>
+        </div>
+        <div class="dashboard-card">
+          <div class="card-icon cakes-icon">🍰</div>
+          <div class="card-info">
+            <div class="card-value" id="cakesSold">0</div>
+            <div class="card-label">Cakes Sold</div>
+          </div>
+        </div>
+        <div class="dashboard-card">
+          <div class="card-icon pending-icon">⏳</div>
+          <div class="card-info">
+            <div class="card-value" id="pendingOrders">0</div>
+            <div class="card-label">Pending Orders</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Sales Overview Chart + Top Selling Products -->
+      <div class="dashboard-grid chart-row">
+        <div class="dashboard-card chart-card wide">
+          <h3>Sales Overview</h3>
+          <div class="chart-tabs">
+            <button class="chart-tab active" data-chart="daily">Daily</button>
+            <button class="chart-tab" data-chart="weekly">Weekly</button>
+            <button class="chart-tab" data-chart="monthly">Monthly</button>
+          </div>
+          <canvas id="salesChart"></canvas>
+        </div>
+        <div class="dashboard-card chart-card">
+          <h3>Top Selling Products</h3>
+          <div id="topProductsList" class="top-products-list"></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Sales by Category + Payment Summary -->
+      <div class="dashboard-grid chart-row">
+        <div class="dashboard-card chart-card">
+          <h3>Sales by Category</h3>
+          <canvas id="categoryChart"></canvas>
+          <div id="categoryLegend" class="chart-legend"></div>
+        </div>
+        <div class="dashboard-card chart-card">
+          <h3>Payment Summary</h3>
+          <div id="paymentSummary" class="payment-summary"></div>
+        </div>
+      </div>
+
+      <!-- Row 4: Order Status + Stock Insights -->
+      <div class="dashboard-grid chart-row">
+        <div class="dashboard-card chart-card">
+          <h3>Order Status</h3>
+          <canvas id="statusChart"></canvas>
+          <div id="statusLegend" class="chart-legend"></div>
+        </div>
+        <div class="dashboard-card chart-card">
+          <h3>Stock Insights</h3>
+          <div class="stock-insights-grid">
+            <div class="stock-insight-item">
+              <span class="stock-insight-value" id="totalProducts">0</span>
+              <span class="stock-insight-label">Total Products</span>
+            </div>
+            <div class="stock-insight-item">
+              <span class="stock-insight-value" id="inStockProducts">0</span>
+              <span class="stock-insight-label">In Stock</span>
+            </div>
+            <div class="stock-insight-item">
+              <span class="stock-insight-value" id="lowStockProducts">0</span>
+              <span class="stock-insight-label">Low Stock</span>
+            </div>
+            <div class="stock-insight-item">
+              <span class="stock-insight-value" id="outOfStockProducts">0</span>
+              <span class="stock-insight-label">Out of Stock</span>
+            </div>
+          </div>
+          <div class="low-stock-list" id="lowStockList"></div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="dashboard-card recent-orders-card">
+        <div class="card-header">
+          <h3>Recent Orders</h3>
+          <button id="viewAllOrdersBtn" class="secondary">View All Orders</button>
+        </div>
+        <div id="recentOrdersList" class="recent-orders-list"></div>
+      </div>
+  </div>
+
+  <!-- ADD ITEM (Dine-in) -->
+  <div id="addItemModal" class="stock-panel hidden">
+    <div class="stock-panel-content" style="max-width:980px;">
+      <div class="stock-header">
+        <div>
+          <div style="font-weight:700;">Add Item</div>
+          <div class="muted" style="margin-top:4px;">Pick Dine-in / Take-away and select items to add to this order.</div>
+        </div>
+        <div><button id="closeAddItemBtn" class="cust-tab">Close</button></div>
+      </div>
+
+      <div class="input-group">
+        <label>Category</label>
+        <div id="addCategoryTabs" class="pill-group"></div>
+      </div>
+
+      <div class="additem-toolbar">
+        <div class="input-group small">
+          <label>Type</label>
+          <select id="addType">
+            <option value="dine">Dine-in</option>
+            <option value="take">Take-away</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Search</label>
+          <input type="text" id="addSearch" placeholder="Search cakes..." />
+        </div>
+        <div class="spacer"></div>
+        <button id="confirmAddSelectedBtn" class="primary">Add Selected Items</button>
+      </div>
+
+      <div id="addCardsGrid" class="addcards-grid"></div>
+    </div>
+  </div>
+
+  <!-- MANAGE ITEMS (ON/OFF) -->
+  <div id="manageItemsModal" class="stock-panel hidden">
+    <div class="stock-panel-content" style="max-width:980px;">
+      <div class="stock-header">
+        <h2>Manage Items</h2>
+        <div><button id="closeManageItemsBtn" class="cust-tab">Close</button></div>
+      </div>
+      <div class="muted">Switch category</div>
+      <div id="manageCategoryTabs" class="pill-group" style="margin-bottom:10px;"></div>
+      <p class="muted">Toggle items ON to show them on the main page, stock page, and add-item popup.</p>
+      <div id="manageItemsGrid" class="manage-grid"></div>
+      <div class="stock-actions" style="justify-content:flex-end;">
+        <button id="saveManageItemsBtn" class="primary">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
